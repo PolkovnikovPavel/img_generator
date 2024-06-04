@@ -32,15 +32,28 @@ def save_img(url, path):
     out.close()
 
 
+def get_all_names():
+    all_names = []
+    for filename in os.listdir(name_dir):
+        if filename.endswith('.jpg'):
+            all_names.append(filename[:-4])
+    return all_names
+
+
 def main():
-    vk_session = vk_api.VkApi(login, password, auth_handler=two_factor, captcha_handler=captcha_handler)
+    my_token = ''
+    with open('C:/Users/python/programs/vk/changing_avatar/token') as f:
+        my_token = f.read()
+    print(my_token)
+
     try:
-        vk_session.auth(token_only=True)
+        vk_session = vk_api.VkApi(token=my_token, auth_handler=two_factor, captcha_handler=captcha_handler)
+        vk = vk_session.get_api()
     except vk_api.AuthError as error_msg:
         print(error_msg)
         return
-    vk = vk_session.get_api()
-    all_names = []
+
+    all_names = get_all_names()
     count = 0
     offset = 0
     is_out = False
@@ -58,16 +71,19 @@ def main():
                     if attachment['type'] != 'photo':
                         continue
                     try:
-                        url_photo = attachment['photo']['sizes'][4]['url']
+                        url_photo = attachment['photo']['sizes'][2]['url']
                         name = url_photo.split('https://sun1-26.userapi.com')[-1].split('.jpg')[0].split('/')[-1]
                         if name not in all_names:
                             save_img(url_photo, f'{name_dir}/{name}.jpg')
                             count += 1
                             all_names.append(name)
                             print(count, url_photo)
+                        else:
+                            count += 1
+                            print(count, name)
                     except:
                         pass
-                    if count == 96*54:
+                    if count >= 7000:
                         is_out = True
                         break
                 if is_out:
@@ -78,7 +94,7 @@ def main():
         offset += 100
 
 
-name_dir = 'imges_sciencemem'
+name_dir = 'images/sources'
 
 if __name__ == '__main__':
     main()
